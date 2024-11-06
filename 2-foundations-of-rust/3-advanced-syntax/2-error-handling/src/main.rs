@@ -58,19 +58,15 @@ fn get_username( ) ->  Result<String, MyError> {
 fn main() {
     // let name=get_username();
     // println!("Hello {name}!")
-    loop {
         match get_username() {
             Ok(name) => {
                 println!("Hello {name}!");
-                break;
             }
             Err(MyError::InvalidName) => {
                 println!("that's not a valid name, try again");
             }
             Err(MyError::IOError(e)) => {
                 eprintln!("Error: {}", e);
-                break;
             }
         }
-    }
 }
