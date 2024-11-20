@@ -19,15 +19,15 @@
 //  - add a method "peek" so that "queue.peek()" returns the same thing as "queue.read()", but leaves the element in the queue
 
 struct RingBuffer {
-    data: [u8; 16],
+    data: Box<[u8]>,
     start: usize,
     end: usize,
 }
 
 impl RingBuffer {
-    fn new() -> RingBuffer {
+    fn new(size: usize) -> RingBuffer {
         RingBuffer {
-            data: [0; 16],
+            data: make_box(size + 1),
             start: 0,
             end: 0,
         }
@@ -37,10 +37,17 @@ impl RingBuffer {
     /// it returns None if the queue was empty
 
     fn read(&mut self) -> Option<u8> {
-        todo!()
+        // todo!()
+        if self.start == self.end {
+            None
+        } else {
+            let value = self.data[self.start];
+            self.start = (self.start + 1) % self.data.len();
+            Some(value)
+        }
     }
 
-    /// This function tries to put `value` on the queue; and returns true if this succeeds
+    /// This function tries to put value on the queue; and returns true if this succeeds
     /// It returns false if writing to the queue failed (which can happen if there is not enough room)
 
     fn write(&mut self, value: u8) -> bool {
@@ -53,6 +60,18 @@ impl RingBuffer {
             self.end = pos;
 
             true
+        }
+    }
+
+    fn has_room(&self) -> bool {
+        (self.end + 1) % self.data.len() != self.start
+    }
+
+    fn peek(&self) -> Option<u8> {
+        if self.start == self.end {
+            None
+        } else {
+            Some(self.data[self.start])
         }
     }
 }
@@ -75,12 +94,35 @@ impl Iterator for RingBuffer {
 }
 
 fn main() {
-    let mut queue = RingBuffer::new();
-    assert!(queue.write(1));
-    assert!(queue.write(2));
-    assert!(queue.write(3));
-    assert!(queue.write(4));
-    assert!(queue.write(5));
+    let mut queue = RingBuffer::new(5);
+
+    if (queue.has_room()) {
+        assert!(queue.write(1));
+    }
+    if (queue.has_room()) {
+        assert!(queue.write(2));
+    }
+    if (queue.has_room()) {
+        assert!(queue.write(3));
+    }
+    if (queue.has_room()) {
+        assert!(queue.write(4));
+    }
+    if (queue.has_room()) {
+        assert!(queue.write(5));
+    }
+    if (queue.has_room()){
+        assert!(queue.write(6));
+    } else {
+        println!("Nu mai are loc");
+    }
+    if let Some(value) = queue.peek(){
+        println!("Peek: {}", value);
+    }
+    if let Some(value) = queue.read() {
+        println!("Read: {}", value);
+    }
+
     for elem in queue {
         println!("{elem}");
     }

@@ -24,31 +24,49 @@
 use std::io::{BufRead, self, Write};
 
 #[derive(Debug)]
-enum MyError{ InvalidName,IOError( io::Error),
+enum MyError{
+    InvalidName,
+    IOError( io::Error),
 }
 
-fn get_username( )
-->  String
-{
+fn get_username( ) ->  Result<String, MyError> {
     print!("Username: ");
-    io::stdout().flush();
-
-    let mut input=String::new();
-    io::stdin().lock().read_line(&mut input); input=input.trim().to_string();
-
-    for c in input.chars()
-    {
-	if !char::is_alphabetic(c) { panic!("that's not a valid name, try again"); }
+    match io::stdout().flush() {
+        Ok(_) => {},
+        Err(e) => return Err(MyError::IOError(e))
     }
 
-if input.is_empty() {
-panic!("that's not a valid name, try again");
-}
+    let mut input=String::new();
+    io::stdin().lock().read_line(&mut input);
+    input=input.trim().to_string();
 
-    input
+    for c in input.chars() {
+        if !char::is_alphabetic(c) {
+            // panic!("that's not a valid name, try again");
+            return Err(MyError::InvalidName)
+        }
+    }
+
+    if input.is_empty() {
+        // panic!("that's not a valid name, try again");
+        return Err(MyError::InvalidName)
+    }
+
+    Ok(input)
 }
 
 fn main() {
-    let name=get_username();
-    println!("Hello {name}!")
+    // let name=get_username();
+    // println!("Hello {name}!")
+        match get_username() {
+            Ok(name) => {
+                println!("Hello {name}!");
+            }
+            Err(MyError::InvalidName) => {
+                println!("that's not a valid name, try again");
+            }
+            Err(MyError::IOError(e)) => {
+                eprintln!("Error: {}", e);
+            }
+        }
 }
